@@ -1,11 +1,10 @@
-//import { Inject } from "@nestjs/common";
 import { ConfigService } from "src/config/config.service";
 import { DataSource } from "typeorm"
 
 export const databaseProvider=[
     {
-        provide: 'DATABASE_CONNECTION',
-        Inject: [ConfigService],
+        provide: 'DATABASE_CONNECTION_POSTGRES',
+        inject: [ConfigService],
         useFactory:(config:ConfigService)=>{
             const dataSource= new DataSource({
                 type:'postgres',

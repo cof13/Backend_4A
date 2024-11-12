@@ -13,7 +13,7 @@ import { ConfigModule } from 'src/config/config.module';
 
                 type:'postgres',
                 host:config.get('HOST') ||'localhost',
-                port: +config.get('PORT_BD'),
+                port: +config.get('PORT'),
                 username: config.get('USERNAME') ||'root',
                 password: config.get('PASSWORD') ||'prueba',
                 database: config.get('DATABASE'),
