@@ -1,26 +1,27 @@
-
-POST http://127.0.0.1:3001/auth/register
+POST http://127.0.0.1:3000/auth/register
 Content-Type: application/json
 
 {
-    "name": "prueba",
-    "email": "criss@hm.com",
-    "password": "123456"
+    "name":"prueba",
+    "email":"",
+    "password":"123456"
+
 }
 
 
-### login sin conexion a BBD
 
+### login 
 
-POST http://127.0.0.1:3001/auth/login
-Content-Type: application/json
+POST http://127.0.0.1:3000/auth/login
+Content-Type: application/json 
 
 {
-    "name":"prueba2",
-    "email":"criss2@hm.com",
-    "password": "1234567"
+    "name":"prueba",
+    "email":"",
+    "password":"123456"
+
 }
 
-### Users
-
-GET http://127.0.0.1:3001/users
+###users
+GET http://127.0.0.1:3000/users
+Authorization: Bearer 

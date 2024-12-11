@@ -1,4 +1,4 @@
 export class CreateCategoriaDto {
     nombre:string;
-    detalle:string;
+    detalle?:string;
 }

@@ -1,0 +1,16 @@
+### Listar Productos
+GET http://localhost:3000/producto
+
+### Crear producto
+POST http://localhost:3000/producto
+Content-Type: application/json
+
+{
+  "nombre": "Producto A",
+  "precio": "10",
+  "stock": 1,
+  "categoriaId": 1
+}
+
+### nombre
+GET http://localhost:3000/producto/back
