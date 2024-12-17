@@ -25,7 +25,7 @@ import { join } from 'path';
         host: 'smtp.gmail.com', // Cambia esto por el host de tu servidor de correo
         port: 587, // El puerto puede cambiar dependiendo de tu configuración SMTP
         auth: {
-          user: 'leonardoedi1979@gmail.com', // Tu correo de usuario para autenticarte
+          user: 'crystym511@gmail.com', // Tu correo de usuario para autenticarte
           pass: 'jxpp jswc njdr zxhl', // La contraseña de tu cuenta
         },
         secure: false, // Si estás usando STARTTLS (en este caso es false para port 587)
