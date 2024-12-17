@@ -1,8 +1,15 @@
-import { PartialType } from "@nestjs/mapped-types";
-import { LoginAuthDto } from "./login-auth.dto";
-import { IsNotEmpty } from "class-validator";
+// register-auth.dto.ts
+import { IsEmail, IsNotEmpty, MaxLength, MinLength } from 'class-validator';
 
-export class RegisterAuthDto extends PartialType(LoginAuthDto){
-    @IsNotEmpty()
-    name: string;
+export class RegisterAuthDto {
+  @IsEmail()
+  @IsNotEmpty()
+  mail: string;
+  @IsNotEmpty()
+  name: string;
+
+  @MinLength(6)
+  @MaxLength(25)
+  @IsNotEmpty()
+  password: string;
 }

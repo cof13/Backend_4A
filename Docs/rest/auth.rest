@@ -3,25 +3,19 @@ Content-Type: application/json
 
 {
     "name":"prueba",
-    "email":"",
+    "email":"jdede@gmial.com",
     "password":"123456"
-
 }
 
-
-
-### login 
-
-POST http://127.0.0.1:3000/auth/login
-Content-Type: application/json 
+### login sin conexion a BDD
+POST  http://127.0.0.1:3000/auth/login 
+Content-Type: application/json
 
 {
-    "name":"prueba",
-    "email":"",
-    "password":"123456"
-
+    "mail": "leonardoedi3@gmail.com",
+    "password": "Edison11"
 }
 
-###users
-GET http://127.0.0.1:3000/users
-Authorization: Bearer 
+### user
+GET http://127.0.0.1:3000/user
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImFkbWluQGdtYWlsLmNvbSIsImlkZSI6MSwiaWF0IjoxNzMxMjY0ODU3LCJleHAiOjE3MzEyNjQ5MTd9.8z8-e5Rd7CzjiyLkYz2ar3NwkaYfrcWPBmAIB61dEvU

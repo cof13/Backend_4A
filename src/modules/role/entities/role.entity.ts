@@ -1,16 +1,19 @@
 import { User } from "../../users/entities/user.entity";
 import { Column, Entity, JoinTable, ManyToMany, PrimaryGeneratedColumn } from "typeorm";
 
-
 @Entity('roles')
 export class Role {
     @PrimaryGeneratedColumn()
     id: number;
+
     @Column()
-    nombre:string;
+    nombre: string;
+
     @Column()
-    detalle?:string
+    detalle:string;
+
     @ManyToMany(()=>User)
-    @JoinTable({name:'role_user'})//con esto se crea la tercera tabla 
-    users:User[]
+    @JoinTable({name:'roles_user'})//con esto se crea la tercera tabla
+    users: User[];
+
 }

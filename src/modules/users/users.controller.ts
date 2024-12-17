@@ -3,23 +3,18 @@ import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
-
-@UseGuards(JwtAuthGuard)
-@ApiBearerAuth()
-@ApiTags('usuario')
+@UseGuards(JwtAuthGuard) // Aplica el guard a todo el controlador
 @Controller('users')
 export class UsersController {
-  constructor(private readonly usersService: UsersService) { }
+  constructor(private readonly usersService: UsersService) {}
 
   @Post()
   create(@Body() createUserDto: CreateUserDto) {
     return this.usersService.create(createUserDto);
   }
 
-
-  @Get()
+  @Get() // No es necesario @UseGuards aquí
   findAll() {
     return this.usersService.findAll();
   }

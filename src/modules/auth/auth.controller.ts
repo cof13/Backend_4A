@@ -1,28 +1,34 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, Post, Query } from '@nestjs/common';
 import { RegisterAuthDto } from './dto/register-auth.dto';
-import { LoginAuthDto } from './dto/login-auth.dto';
 import { AuthService } from './auth.service';
-import { ApiTags } from '@nestjs/swagger';
+import { LoginAuthDto } from './dto/login-auth.dto';
+import { ForgotPasswordDto } from './dto/forgot-password.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 
-@ApiTags('auth')
 @Controller('auth')
 export class AuthController {
 
-    constructor(private authService: AuthService) {}
+    constructor(private authService:AuthService) {
+
+    }
     @Post('register')
-    registerUser(@Body() userObj: RegisterAuthDto) {
-        console.log(userObj);
-        return this.authService.funRegister(userObj);
+    async register(@Body() registerAuthDto: RegisterAuthDto) {
+      return this.authService.register(registerAuthDto);
     }
-
     @Post('login')
-    login(@Body() credenciales: LoginAuthDto & { rememberMe: boolean }) {
-        return this.authService.login(credenciales, credenciales.rememberMe);
-    }
+    async login(@Body() loginAuthDto: LoginAuthDto) {
+    return await this.authService.login(loginAuthDto);
+  }
+  @Post('forgot-password')
+  async forgotPassword(@Body() forgotPasswordDto: ForgotPasswordDto) {
+    return this.authService.forgotPassword(forgotPasswordDto);
+  }
 
-    @Post('forgot-password')
-    async forgotPassword(@Body() body: { email: string }) {
-        const { email } = body;
-        return this.authService.forgotPassword(email);
-    }
+  @Post('reset-password')
+  async resetPassword(@Body() resetPasswordDto: ResetPasswordDto) {
+    return this.authService.resetPassword(resetPasswordDto);
+  }
+  
+
+  
 }

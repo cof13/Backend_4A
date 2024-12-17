@@ -1,73 +1,140 @@
-import { HttpException, Injectable } from '@nestjs/common';
-import { LoginAuthDto } from './dto/login-auth.dto';
+import { Injectable, ConflictException, UnauthorizedException, NotFoundException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { InjectRepository } from '@nestjs/typeorm';
-import { User } from '../users/entities/user.entity';
-import { Repository } from 'typeorm';
+import { UsersService } from 'src/modules/users/users.service';
+import * as bcrypt from 'bcrypt';
 import { RegisterAuthDto } from './dto/register-auth.dto';
-import { hash, compare } from 'bcrypt';
-import * as nodemailer from 'nodemailer';
+import { CreateUserDto } from 'src/modules/users/dto/create-user.dto';
+import { LoginAuthDto } from './dto/login-auth.dto';
+import { ForgotPasswordDto } from './dto/forgot-password.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
+import { MailerService } from '@nestjs-modules/mailer';
 
 @Injectable()
 export class AuthService {
+  constructor(
+    private jwtService: JwtService,
+    private usersService: UsersService,
+    private mailerService: MailerService
+  ) {}
 
-  constructor(private jwtService: JwtService,
-    @InjectRepository(User) private userRepository: Repository<User>) { }
-
-  async funRegister(objUser: RegisterAuthDto) {
-    const { password } = objUser;
-    const plainToHash = await hash(password, 12);
-    objUser = { ...objUser, password: plainToHash };
-    return this.userRepository.save(objUser);
-  }
-
-  async login(credenciales: LoginAuthDto, rememberMe: boolean) {
-    const { email, password } = credenciales;
-    const user = await this.userRepository.findOne({ where: { email } });
-
-    if (!user) return new HttpException('Usuario no encontrado', 404);
-
-    const verificarPass = await compare(password, user.password);
-    if (!verificarPass) throw new HttpException('Password invalido', 401);
-
-    const payload = { email: user.email, id: user.id };
-    const expiresIn = rememberMe ? '2m' : '1m';
-
-    const token = this.jwtService.sign(payload, { expiresIn });
-    return { user: user, token };
-  }
-
-  async forgotPassword(email: string): Promise<any> {
-    const user = await this.userRepository.findOne({ where: { email } });
-
-    if (!user) {
-      throw new HttpException('Usuario no encontrado', 404);
+  // Método para registrar un nuevo usuario
+  async register(registerAuthDto: RegisterAuthDto) {
+    const { name, mail, password } = registerAuthDto;
+  
+    // Verificar si el correo ya está registrado
+    const existingUser = await this.usersService.findByEmail(mail);
+    if (existingUser) {
+      throw new ConflictException('El correo electrónico ya está registrado');
     }
-    const resetToken = this.jwtService.sign({ email: user.email }, { expiresIn: '1h' });
-    if (!resetToken) {
-      console.error('Error al generar el token JWT');
-      throw new HttpException('Error al generar el token', 500);
-    }
-    const transporter = nodemailer.createTransport({
-      service: 'gmail',
-      auth: {
-        user: 'aic4900@gmail.com',
-        pass: '123456'
-      }
-    });
-
-    const mailOptions = {
-      from: 'aic4900@gmail.com',
-      to: email,
-      subject: 'Restablecer contraseña',
-      text: `Haz clic en el siguiente enlace para restablecer tu contraseña: http://localhost:3000/reset-password/${resetToken}`
+  
+    // Encriptar la contraseña
+    const hashedPassword = await bcrypt.hash(password, 10);
+  
+    // Crear un nuevo usuario
+    const newUser: CreateUserDto = {
+      name,
+      mail,
+      password: hashedPassword,
     };
+  
+    const user = await this.usersService.create(newUser);
+  
+    // Generar token JWT
+    const payload = { mail: user.mail, id: user.id };
+    const token = this.jwtService.sign(payload);
+  
+    // Excluir la contraseña de la respuesta
+    const { password: _, ...userData } = user;
+  
+    return { user: userData, token };
+  }
+  
 
+  // Método de login
+  async login(loginAuthDto: LoginAuthDto) {
+    const { mail, password } = loginAuthDto;
+  
+    const user = await this.usersService.findByEmail(mail);
+    if (!user) {
+      throw new UnauthorizedException('Correo incorrecto');
+    }
+    const passwordMatch = await bcrypt.compare(password, user.password);
+    if (!passwordMatch) {
+      throw new UnauthorizedException('Contraseña incorrecta');
+    }
+  
+    const payload = { email: user.mail, id: user.id };
+    const token = this.jwtService.sign(payload);
+  
+    return { token };
+  } 
+
+   // Método para solicitar restablecimiento de contraseña
+   async forgotPassword(forgotPasswordDto: ForgotPasswordDto) {
+    const { name, email } = forgotPasswordDto;
+
+    // Buscar al usuario por nombre y correo electrónico
+    const user = await this.usersService.findByNameAndEmail(name, email);
+    if (!user) {
+      throw new NotFoundException('Usuario no encontrado con los datos proporcionados');
+    }
+
+    // Generar un token de restablecimiento de contraseña
+    const payload = { email: user.mail, sub: user.id };
+    const resetToken = this.jwtService.sign(payload, { expiresIn: '1h' }); // Token válido por 1 hora
+
+    // Aquí deberías enviar el token al correo electrónico del usuario.
+    // Por simplicidad, retornaremos el token en la respuesta.
+    // En producción, usa un servicio de correo electrónico para enviar el token.
+    // Construir la URL de restablecimiento (debería apuntar a tu front-end)
+     const resetUrl = `http://localhost:4200/auth/reset-password?token=${resetToken}`;
+
+    // Enviar correo electrónico 
+    await this.mailerService.sendMail({
+       to: user.mail,
+        subject: 'Recuperación de contraseña',
+         template: 'forgot-password', // Ruta a tu plantilla de correo 
+         context: {
+           name: user.name, 
+           url: resetUrl,
+           },
+           });
+
+    return { message: 'Se ha enviado un enlace de restablecimiento de contraseña a su correo electrónico', resetToken };
+  }
+
+  // Método para cambiar la contraseña
+  async resetPassword(resetPasswordDto: ResetPasswordDto) {
+    const { newPassword, token } = resetPasswordDto;
+  
     try {
-      await transporter.sendMail(mailOptions);
-      return { message: 'Correo de restablecimiento enviado' };
+      const payload = this.jwtService.verify(token);
+      const userId = payload.sub;
+  
+      // Encriptar la nueva contraseña
+      const hashedPassword = await bcrypt.hash(newPassword, 10);
+  
+      // Actualizar la contraseña del usuario
+      await this.usersService.updatePassword(userId, hashedPassword);
+  
+      return { message: 'Contraseña actualizada correctamente' };
     } catch (error) {
-      throw new HttpException('Error al enviar correo', 500);
+      throw new UnauthorizedException('Token inválido o expirado');
     }
   }
+  
+
+  // Método para validar el token de restablecimiento
+  async verifyResetToken(token: string): Promise<number> {
+    try {
+      const payload = this.jwtService.verify(token);
+      return payload.sub; // Retorna el ID del usuario
+    } catch (error) {
+      throw new UnauthorizedException('Token inválido o expirado');
+    }
+  }
+
+
+
+  
 }
